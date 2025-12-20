@@ -1,0 +1,185 @@
+{
+    "group_seed": 214265977,
+    "users": [
+        {
+            "username": "user_weak_1",
+            "password": "dragon",
+            "category": "weak",
+            "totp_secret": "GTVBHN6NZ7CGTPVEH4EF5QO3MRSV4N3L"
+        },
+        {
+            "username": "user_weak_2",
+            "password": "12345",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_3",
+            "password": "justin",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_4",
+            "password": "666666",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_5",
+            "password": "andrea",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_6",
+            "password": "secret",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_7",
+            "password": "amanda",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_8",
+            "password": "yellow",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_9",
+            "password": "sweety",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_weak_10",
+            "password": "soccer",
+            "category": "weak",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_1",
+            "password": "nikkisixx",
+            "category": "meduim",
+            "totp_secret": "KE34GXEJVQRSV4TQMKX7AXIQ3HZY5GOJ"
+        },
+        {
+            "username": "user_meduim_2",
+            "password": "214265977",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_3",
+            "password": "belinea",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_4",
+            "password": "engaged",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_5",
+            "password": "mckinney",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_6",
+            "password": "bigboy12",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_7",
+            "password": "iamtheman",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_8",
+            "password": "nijntje",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_9",
+            "password": "christan",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_meduim_10",
+            "password": "pazzword",
+            "category": "meduim",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_1",
+            "password": "ijhJIfCBPfFt",
+            "category": "strong",
+            "totp_secret": "TXCEFGIXEFXKPVL3WKZKPJMCUWQOOPA2"
+        },
+        {
+            "username": "user_strong_2",
+            "password": "wFbpuviEnbbF",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_3",
+            "password": "bOOfnAiPYWqQ",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_4",
+            "password": "j1XZ9C2xBZkp",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_5",
+            "password": "lxBzIEigEJi2",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_6",
+            "password": "tBA8ow9PjSI2",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_7",
+            "password": "LJmsBKKnfFd7",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_8",
+            "password": "DBjx9DSwZiHM",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_9",
+            "password": "5ywnJPgvYVpl",
+            "category": "strong",
+            "totp_secret": null
+        },
+        {
+            "username": "user_strong_10",
+            "password": "uixivrf6l5Iz",
+            "category": "strong",
+            "totp_secret": null
+        }
+    ]
+}
