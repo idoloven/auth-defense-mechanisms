@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import uuid
 from contextlib import contextmanager
 
 DB_FILE = '../assets/users.db'
@@ -54,7 +53,7 @@ class Database:
                 raise ValueError("Username already exists")
       
             
-    def get_user(self, username):
+    def get_user(self, username: str):
         with self._connect() as conn:
             cur = conn.execute(
                 "SELECT * FROM clients WHERE username = ?",
