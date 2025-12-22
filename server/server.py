@@ -1,8 +1,10 @@
+import io
+import structlog
 from user import User
+from config import Config
 from database import Database
 from flask import Flask, request, jsonify
 from auth_manager import AuthManager
-from logger import write_log
 
 auth_manager = AuthManager()
 db = Database()
@@ -29,7 +31,7 @@ def login():
     result, message, totp_secret = auth_manager.verify_login(username, password)
 
     # todo validate signature
-    write_log("LOGIN_ATTEMPT", username, "SUCCESS", client_ip, "Login successful")
+    logger.info("", username=username, result="")
     
     # validate 
     response_data = {
@@ -46,3 +48,38 @@ def login_totp():
 @app.route('/admin/get_captcha_token', methods=['POST'])
 def get_captcha_token():
     pass
+
+
+def configure_logger(log_file):
+    structlog.configure(
+        processors=[
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer()
+        ],
+        context_class=dict,
+        logger_factory=structlog.WriteLoggerFactory(file=log_file),
+        cache_logger_on_first_use=True,
+    )
+
+    
+if __name__ == "__main__":
+    # logger config
+    log_file = open(Config.LOG_FILE_NAME, "a", encoding="utf-8", buffering=Config.LOG_BUFFER_SIZE)
+    configure_logger(log_file)
+    logger = structlog.get_logger().bind(
+    group_seed=Config.GROUP_SEED,
+    hash_mode=Config.PASSWORD_HASH_MODE,
+    protection_flags=Config.PROTECTION_FLAGS
+    )
+
+    try:
+        app.run()
+        
+    except KeyboardInterrupt:
+        print("\nStopping server")
+        
+    finally:
+        print("Flushing buffer to disk")
+        log_file.flush()
+        log_file.close()
+        print("logs saved to disk. exiting")
