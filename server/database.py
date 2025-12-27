@@ -30,7 +30,10 @@ class Database:
                 totp_secret TEXT,
                 category TEXT,
                 failed_attempts INTEGER DEFAULT 0,
-                lockout_until REAL
+                is_locked INTEGER DEFAULT 0,
+                rl_window_start INTEGER DEFAULT 0,
+                rl_window_attempts INTEGER DEFAULT 0,
+                captcha_attempts INTEGER DEFAULT 0
             )
         ''')
             
@@ -65,15 +68,58 @@ class Database:
         
         
     def update_failed_attempts(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET failed_attempts = ? WHERE username = ?",
+                (user.attempts, user.username)
+            )
+            conn.commit()
+
+    def lock_account(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET is_locked = 1 WHERE username = ?",
+                (user.username)
+            )
+            conn.commit()
+            
+    def is_locked(self, user):
         with self._connect() as conn:
-            if user.lockout_time:
-                conn.execute(
-                    "UPDATE users SET failed_attempts = ?, lockout_until = ? WHERE username = ?",
-                    (user.attempts, user.lockout_time, user.username)
-                )
-            else:
-                conn.execute(
-                    "UPDATE users SET failed_attempts = ? WHERE username = ?",
-                    (user.attempts, user.username)
-                )
+            cur = conn.execute(
+                "SELECT is_locked FROM users WHERE username = ?",
+                (user.username,)
+            )
+            is_locked = cur.fetchone()
+            return bool(is_locked[0])
+        
+    def increase_window_attempts(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET rl_windows_attempts = ? WHERE username = ?",
+                (user.rl_window_attempts + 1, user.username)
+            )
+            conn.commit()
+    
+    def set_new_window(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET rl_windows_attempts = 1, rl_window_start = ? WHERE username = ?",
+                (user.rl_window_start, user.username)
+            )
+            conn.commit()
+            
+    def increase_captcha_attempts(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET captcha_attempts = ? WHERE username = ?",
+                (user.captcha_attempts + 1, user.username)
+            )
+            conn.commit()
+    
+    def reset_captcha_attempts(self, user):
+        with self._connect() as conn:   
+            conn.execute(
+                "UPDATE users SET captcha_attempts = 1 WHERE username = ?",
+                (user.username)
+            )
             conn.commit()

@@ -1,7 +1,11 @@
 import os
+import time
+import pyotp
 import bcrypt
 import hashlib
 import secrets
+import functools
+import tracemalloc
 from database import Database
 from config import Config, Protection
 from argon2 import PasswordHasher, Type, exceptions
@@ -20,18 +24,64 @@ class AuthManager:
         if Config.PROTECTION_FLAGS & Protection.PEPPER:
             self.PEPPER = os.getenv("PEPPER", "")
             
-    def auth(self, db: Database, username: str, password: str) -> bool:
-        if Config.PROTECTION_FLAGS & Protection.RATE_LIMIT:
-            # todo sleep
-            pass
-        if Config.PROTECTION_FLAGS & Protection.LOCKOUT:
-            pass
+    @measure_performance
+    def auth_totp(self, db: Database, username: str, totp_token) -> bool:
+        user = db.get_user(username)
+        if user.totp_secret is None:
+            return False
+            
+        totp = pyotp.TOTP(user.totp_secret)
+        return totp.verify(totp_token, valid_window=Config.TOTP_VALID_WINDOW)
+    
+    @measure_performance
+    def auth(self, db: Database, username: str, password: str, captcha_token) -> bool:
+        user = db.get_user(username)
+        if Config.PROTECTION_FLAGS & Protection.LOCKOUT and user.is_locked:
+            return False #todo return account locked
         
+        if Config.PROTECTION_FLAGS & Protection.RATE_LIMIT:
+            now = time.time()
+            # check if new window
+            if now >= user.rl_window_start + Config.RATE_LIMIT_WINDOW_SIZE:
+                user.rl_window_start = int(now / Config.RATE_LIMIT_WINDOW_SIZE) * Config.RATE_LIMIT_WINDOW_SIZE
+                db.set_new_window(user)
+            # check if reached limit.
+            elif user.rl_window_attempts + 1 > Config.RATE_LIMIT_ATTEMPTS_IN_WINDOW:
+                return False #todo what to ruturn        
+            else:
+                db.increase_window_attempts(user) # increase attempts by 1
+                
+        if Config.PROTECTION_FLAGS & Protection.CAPTCHA:
+            if user.captcha_attempts + 1 > Config.MAX_CAPTCHA_ATTEMPTS: #captacha required
+                if captcha_token is None or captcha_token != self.captach_token: # if no token or incorrect
+                    return # need captcha #todo
+                else: # token is correct
+                    db.reset_captcha_attempts(user)
+            else:
+                db.increase_captcha_attempts(user)
+                    
         if Config.PROTECTION_FLAGS & Protection.PEPPER:
             password += self.PEPPER
             
-        user = db.get_user(username)
-        return self.is_valid_password(user["password"], user["salt"], password)
+            
+        result = self.is_valid_password(user["password"], user["salt"], password)
+        if result:
+            if Config.PROTECTION_FLAGS & Protection.LOCKOUT: # set failed attempts to 0
+                user.failed_attempts = 0
+                db.update_failed_attempts(user)
+            if Config.PROTECTION_FLAGS & Protection.TOTP:
+                if user.totp_secret is not None: # than totp login required
+                    return # todo what to return. redirect to totp login.
+                    
+        else:
+            if Config.PROTECTION_FLAGS & Protection.LOCKOUT:
+                if user.failed_attempts + 1 >= Config.MAX_ATTEMPTS: # lock account
+                    db.lock_account(user)
+                else: # increment failed attempts
+                    user.failed_attempts += 1
+                    db.update_failed_attempts(user)
+                    
+        return result #todo what to return
     
     def hash(self, password: str) -> str:
         if Config.PROTECTION_FLAGS & Protection.PEPPER:
@@ -84,3 +134,35 @@ class AuthManager:
             return True
         except exceptions.VerifyMismatchError:
             return False
+        
+        
+# decorator for metrics
+def measure_performance(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        tracemalloc.start() # start RAM measuring
+        # measure start time
+        start_time_wall = time.perf_counter()
+        start_time_cpu = time.process_time()
+        
+        try:
+            result = func(*args, **kwargs)
+        finally:
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            # measure end time
+            end_time_wall = time.perf_counter()
+            end_time_cpu = time.process_time()
+
+        latency_ms = (end_time_wall - start_time_wall) * 1000
+        cpu_ms = (end_time_cpu - start_time_cpu) * 1000
+        peak_memory_mb = peak_memory / (1024 * 1024)
+
+        if isinstance(result, dict):
+            result['metrics'] = {
+                'latency_ms': round(latency_ms, 2),
+                'cpu_ms': round(cpu_ms, 2),
+                'memory_peak_mb': round(peak_memory_mb, 2)
+            }
+        return result   
+    return wrapper

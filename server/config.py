@@ -32,8 +32,12 @@ class Config:
     # protections enabled - usage: <protection1> | <protection2> | <protection3>
     PROTECTION_FLAGS = Protection.PEPPER | Protection.RATE_LIMIT
     # rate limit
-    MS_DELAY = 0 # delay in ms
+    RATE_LIMIT_WINDOW_SIZE = 10 # in seconds
+    RATE_LIMIT_ATTEMPTS_IN_WINDOW = 100
     # lockout
     MAX_ATTEMPTS = 0
-    LOCKOUT_DURATION = 0
+    # captcha
+    MAX_CAPTCHA_ATTEMPTS = 0
+    # totp
+    TOTP_VALID_WINDOW = 1
     

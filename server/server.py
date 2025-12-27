@@ -1,10 +1,11 @@
 import io
+import uuid
 import structlog
 from user import User
 from config import Config
 from database import Database
 from flask import Flask, request, jsonify
-from auth_manager import AuthManager
+from auth import AuthManager
 
 auth_manager = AuthManager()
 db = Database()
@@ -44,11 +45,18 @@ def login():
   
 @app.route('/login_totp', methods=['POST'])
 def login_totp():
-    pass
+    data = request.json
+    username = data.get('username')
+    totp_token = data.get('totp_token')
+    totp_result = auth_manager.auth_totp(db, username, totp_token)
+    return # todo what to return
 
-@app.route('/admin/get_captcha_token', methods=['POST'])
-def get_captcha_token():
-    pass
+@app.route('/admin/get_captcha_token', methods=['GET'])
+def get_captcha_token(provided_seed):
+    if provided_seed != Config.GROUP_SEED:
+            return #todo what to return
+    auth_manager.captcha_token = uuid.uuid4()
+    return # what to return auth_manager.captach_token
 
 
 def configure_logger(log_file):
