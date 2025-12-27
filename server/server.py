@@ -1,4 +1,3 @@
-import io
 import uuid
 import structlog
 from user import User
@@ -21,6 +20,7 @@ def register():
     hashed_password, salt = auth_manager.hash(password)
     user = User(username, hashed_password, salt, category, totp_secret)
     db.register_user(user)
+    return jsonify({}), 200
 
 
 @app.route('/login', methods=['POST'])
@@ -28,20 +28,22 @@ def login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
+    captcha_token = data.get('captcha_token')
 
     #todo validate func signature
-    result, message, totp_secret = auth_manager.verify_login(username, password)
+    result = auth_manager.auth(db, username, password, captcha_token)
 
     # todo validate signature
-    logger.info("", username=username, result="")
+    logger.info("", 
+                username=username,
+                result=result["status"], 
+                latency_ms = result["metrics"]["latency_ms"],
+                cpu_ms = result["metrics"]["cpu_ms"],
+                peak_memory = result["metrics"]["memory_peak_mb"])
     
-    # validate 
-    response_data = {
-        "message": "Login successful",
-        "totp_required": (totp_secret is not None) 
-    }
-    # add fail logic, status codes, 429
-    return jsonify(response_data), 200
+    response_data = {"status": result["status"]}
+    status_code = 200 if result["status"] == "success" else 401
+    return jsonify(response_data), status_code
   
 @app.route('/login_totp', methods=['POST'])
 def login_totp():
@@ -49,14 +51,17 @@ def login_totp():
     username = data.get('username')
     totp_token = data.get('totp_token')
     totp_result = auth_manager.auth_totp(db, username, totp_token)
-    return # todo what to return
+    
+    response_data = {"status": totp_result["status"]}
+    status_code = 200 if totp_result["status"] == "totp_success" else 401
+    return jsonify(response_data), status_code
 
 @app.route('/admin/get_captcha_token', methods=['GET'])
 def get_captcha_token(provided_seed):
     if provided_seed != Config.GROUP_SEED:
-            return #todo what to return
+        return jsonify({"status":"captcha_bad_group_seed"}), 401
     auth_manager.captcha_token = uuid.uuid4()
-    return # what to return auth_manager.captach_token
+    return jsonify({"status":"success", "captcha_token": auth_manager.captcha_token}), 200
 
 
 def configure_logger(log_file):

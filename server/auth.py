@@ -28,16 +28,18 @@ class AuthManager:
     def auth_totp(self, db: Database, username: str, totp_token) -> bool:
         user = db.get_user(username)
         if user.totp_secret is None:
-            return False
+            return {"status":"totp_failure"}
             
         totp = pyotp.TOTP(user.totp_secret)
-        return totp.verify(totp_token, valid_window=Config.TOTP_VALID_WINDOW)
+        result = totp.verify(totp_token, valid_window=Config.TOTP_VALID_WINDOW)
+        status = "totp_success" if result else "totp_failure"
+        return {"status":status}
     
     @measure_performance
     def auth(self, db: Database, username: str, password: str, captcha_token) -> bool:
         user = db.get_user(username)
         if Config.PROTECTION_FLAGS & Protection.LOCKOUT and user.is_locked:
-            return False #todo return account locked
+            return {"status": "account_locked"}
         
         if Config.PROTECTION_FLAGS & Protection.RATE_LIMIT:
             now = time.time()
@@ -47,14 +49,14 @@ class AuthManager:
                 db.set_new_window(user)
             # check if reached limit.
             elif user.rl_window_attempts + 1 > Config.RATE_LIMIT_ATTEMPTS_IN_WINDOW:
-                return False #todo what to ruturn        
+                return {"status": "rate_limit_reached"}   
             else:
                 db.increase_window_attempts(user) # increase attempts by 1
                 
         if Config.PROTECTION_FLAGS & Protection.CAPTCHA:
             if user.captcha_attempts + 1 > Config.MAX_CAPTCHA_ATTEMPTS: #captacha required
                 if captcha_token is None or captcha_token != self.captach_token: # if no token or incorrect
-                    return # need captcha #todo
+                    return {"status": "captcha_required"} 
                 else: # token is correct
                     db.reset_captcha_attempts(user)
             else:
@@ -71,7 +73,8 @@ class AuthManager:
                 db.update_failed_attempts(user)
             if Config.PROTECTION_FLAGS & Protection.TOTP:
                 if user.totp_secret is not None: # than totp login required
-                    return # todo what to return. redirect to totp login.
+                    return {"status": "totp_required"}
+            return {"status": "success"} 
                     
         else:
             if Config.PROTECTION_FLAGS & Protection.LOCKOUT:
@@ -81,7 +84,7 @@ class AuthManager:
                     user.failed_attempts += 1
                     db.update_failed_attempts(user)
                     
-        return result #todo what to return
+        return {"status": "failure"} 
     
     def hash(self, password: str) -> str:
         if Config.PROTECTION_FLAGS & Protection.PEPPER:

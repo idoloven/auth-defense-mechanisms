@@ -1,5 +1,6 @@
-import sqlite3
 import os
+import sqlite3
+from user import User
 from contextlib import contextmanager
 
 DB_FILE = '../assets/users.db'
@@ -62,9 +63,17 @@ class Database:
                 "SELECT * FROM clients WHERE username = ?",
                 (username,)
             )
-            user = cur.fetchone()
-            # todo create user instance..
-            return user
+            row = cur.fetchone()
+            return User(row["username"],
+                        row["password_hash"],
+                        row["category"],
+                        totp_secret = row["totp_secret"],
+                        salt = row["salt"],
+                        failed_attempts = row["failed_attempts"],
+                        is_locked = row["is_locked"],
+                        rl_window_start = row["rl_window_start"],
+                        rl_window_attempts = row["rl_window_attempts"],
+                        captcha_attempts = row["captcha_attempts"])
         
         
     def update_failed_attempts(self, user):
