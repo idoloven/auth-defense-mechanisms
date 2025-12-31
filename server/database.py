@@ -3,7 +3,10 @@ import sqlite3
 from user import User
 from contextlib import contextmanager
 
-DB_FILE = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\users.db"
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
+DB_FILE = os.path.join(ASSETS_DIR, 'users.db')
 
 class Database:
     def __init__(self, db_file=DB_FILE):

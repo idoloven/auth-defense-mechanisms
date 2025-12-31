@@ -1,17 +1,22 @@
+import os
+import sys
 import json
 import requests
-import sys
 
-SERVER_URL = "http://localhost:5000"
-USERS_FILE = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\users.json"
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
+USERS_FILE_PATH = os.path.join(ASSETS_DIR, 'users.json')
+
+SERVER_URL = "http://127.0.0.1:5000"
 
 def register_users():
-    print(f"Reading users from {USERS_FILE}")
+    print(f"Reading users from {USERS_FILE_PATH}")
     try:
-        with open(USERS_FILE, 'r', encoding='utf-8') as f:
+        with open(USERS_FILE_PATH, 'r', encoding='utf-8') as f:
             users_data = json.load(f)
     except FileNotFoundError:
-        print(f"file {USERS_FILE} not found")
+        print(f"file {USERS_FILE_PATH} not found")
         sys.exit(1)
 
     for user in users_data["users"]:   

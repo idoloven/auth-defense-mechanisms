@@ -1,10 +1,14 @@
 import uuid
+import logging
 import structlog
 from user import User
 from config import Config
 from database import Database
 from flask import Flask, request, jsonify
 from auth import AuthManager
+
+flask_loggger = logging.getLogger('werkzeug')
+flask_loggger.setLevel(logging.ERROR)
 
 auth_manager = AuthManager()
 db = Database()
@@ -57,7 +61,8 @@ def login_totp():
     return jsonify(response_data), status_code
 
 @app.route('/admin/get_captcha_token', methods=['GET'])
-def get_captcha_token(provided_seed):
+def get_captcha_token():
+    provided_seed = request.args.get('group_seed')
     if provided_seed != Config.GROUP_SEED:
         return jsonify({"status":"captcha_bad_group_seed"}), 401
     auth_manager.captcha_token = uuid.uuid4()
