@@ -3,7 +3,7 @@ import sqlite3
 from user import User
 from contextlib import contextmanager
 
-DB_FILE = '../assets/users.db'
+DB_FILE = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\users.db"
 
 class Database:
     def __init__(self, db_file=DB_FILE):
@@ -49,7 +49,7 @@ class Database:
         with self._connect() as conn:
             try:
                 conn.execute(
-                    "INSERT INTO users (username, password, salt, totp_secret, category) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO users (username, password_hash, salt, totp_secret, category) VALUES (?, ?, ?, ?, ?)",
                     (user.username, user.password, user.salt, user.totp_secret, user.category)
                 )
                 conn.commit()

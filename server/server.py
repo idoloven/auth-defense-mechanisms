@@ -18,7 +18,7 @@ def register():
     category = data.get('category')
     totp_secret = data.get('totp_secret')
     hashed_password, salt = auth_manager.hash(password)
-    user = User(username, hashed_password, salt, category, totp_secret)
+    user = User(username, hashed_password, category, totp_secret, salt)
     db.register_user(user)
     return jsonify({}), 200
 

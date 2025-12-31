@@ -30,7 +30,7 @@ class Config:
     
     
     # protections enabled - usage: <protection1> | <protection2> | <protection3>
-    PROTECTION_FLAGS = Protection.PEPPER | Protection.RATE_LIMIT
+    PROTECTION_FLAGS = Protection.NONE
     # rate limit
     RATE_LIMIT_WINDOW_SIZE = 10 # in seconds
     RATE_LIMIT_ATTEMPTS_IN_WINDOW = 100

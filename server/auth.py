@@ -10,6 +10,37 @@ from database import Database
 from config import Config, Protection
 from argon2 import PasswordHasher, Type, exceptions
 
+        
+# decorator for metrics
+def measure_performance(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        tracemalloc.start() # start RAM measuring
+        # measure start time
+        start_time_wall = time.perf_counter()
+        start_time_cpu = time.process_time()
+        
+        try:
+            result = func(*args, **kwargs)
+        finally:
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            # measure end time
+            end_time_wall = time.perf_counter()
+            end_time_cpu = time.process_time()
+
+        latency_ms = (end_time_wall - start_time_wall) * 1000
+        cpu_ms = (end_time_cpu - start_time_cpu) * 1000
+        peak_memory_mb = peak_memory / (1024 * 1024)
+
+        if isinstance(result, dict):
+            result['metrics'] = {
+                'latency_ms': round(latency_ms, 2),
+                'cpu_ms': round(cpu_ms, 2),
+                'memory_peak_mb': round(peak_memory_mb, 2)
+            }
+        return result   
+    return wrapper
 
 class AuthManager:
     def __init__(self):
@@ -138,34 +169,3 @@ class AuthManager:
         except exceptions.VerifyMismatchError:
             return False
         
-        
-# decorator for metrics
-def measure_performance(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        tracemalloc.start() # start RAM measuring
-        # measure start time
-        start_time_wall = time.perf_counter()
-        start_time_cpu = time.process_time()
-        
-        try:
-            result = func(*args, **kwargs)
-        finally:
-            _, peak_memory = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
-            # measure end time
-            end_time_wall = time.perf_counter()
-            end_time_cpu = time.process_time()
-
-        latency_ms = (end_time_wall - start_time_wall) * 1000
-        cpu_ms = (end_time_cpu - start_time_cpu) * 1000
-        peak_memory_mb = peak_memory / (1024 * 1024)
-
-        if isinstance(result, dict):
-            result['metrics'] = {
-                'latency_ms': round(latency_ms, 2),
-                'cpu_ms': round(cpu_ms, 2),
-                'memory_peak_mb': round(peak_memory_mb, 2)
-            }
-        return result   
-    return wrapper
