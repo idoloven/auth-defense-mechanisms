@@ -126,7 +126,7 @@ class AuthManager:
                 return self.hash_sha256(password)
             case "ARGON2":
                 return self.hash_argon2(password)
-            case "BYCRPT":
+            case "BCRYPT":
                 return self.hash_bcrypt(password)
     
     def is_valid_password(self, password: str, stored_hash: str, stored_salt: str) -> bool:
@@ -160,7 +160,7 @@ class AuthManager:
         return secrets.compare_digest(calculated_hash, stored_hash)
     
     def validate_bcrypt(self, stored_hash, password):
-        return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+        return bcrypt.checkpw(password.encode('utf-8'), stored_hash)
         
     def validate_argon2(self, stored_hash, password):
         try:
