@@ -13,6 +13,7 @@ class Database:
     @contextmanager
     def _connect(self):
         conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
         try:
             yield conn
         finally:
@@ -60,7 +61,7 @@ class Database:
     def get_user(self, username: str):
         with self._connect() as conn:
             cur = conn.execute(
-                "SELECT * FROM clients WHERE username = ?",
+                "SELECT * FROM users WHERE username = ?",
                 (username,)
             )
             row = cur.fetchone()

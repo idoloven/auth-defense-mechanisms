@@ -97,7 +97,7 @@ class AuthManager:
             password += self.PEPPER
             
             
-        result = self.is_valid_password(user["password"], user["salt"], password)
+        result = self.is_valid_password(password, user.password, user.salt)
         if result:
             if Config.PROTECTION_FLAGS & Protection.LOCKOUT: # set failed attempts to 0
                 user.failed_attempts = 0

