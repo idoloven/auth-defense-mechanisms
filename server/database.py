@@ -84,7 +84,7 @@ class Database:
         with self._connect() as conn:   
             conn.execute(
                 "UPDATE users SET failed_attempts = ? WHERE username = ?",
-                (user.attempts, user.username)
+                (user.failed_attempts, user.username)
             )
             conn.commit()
 
@@ -92,7 +92,7 @@ class Database:
         with self._connect() as conn:   
             conn.execute(
                 "UPDATE users SET is_locked = 1 WHERE username = ?",
-                (user.username)
+                (user.username,)
             )
             conn.commit()
             
@@ -108,7 +108,7 @@ class Database:
     def increase_window_attempts(self, user):
         with self._connect() as conn:   
             conn.execute(
-                "UPDATE users SET rl_windows_attempts = ? WHERE username = ?",
+                "UPDATE users SET rl_window_attempts = ? WHERE username = ?",
                 (user.rl_window_attempts + 1, user.username)
             )
             conn.commit()
@@ -116,7 +116,7 @@ class Database:
     def set_new_window(self, user):
         with self._connect() as conn:   
             conn.execute(
-                "UPDATE users SET rl_windows_attempts = 1, rl_window_start = ? WHERE username = ?",
+                "UPDATE users SET rl_window_attempts = 1, rl_window_start = ? WHERE username = ?",
                 (user.rl_window_start, user.username)
             )
             conn.commit()
@@ -133,6 +133,6 @@ class Database:
         with self._connect() as conn:   
             conn.execute(
                 "UPDATE users SET captcha_attempts = 1 WHERE username = ?",
-                (user.username)
+                (user.username,)
             )
             conn.commit()

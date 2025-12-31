@@ -80,13 +80,18 @@ class AuthManager:
                 db.set_new_window(user)
             # check if reached limit.
             elif user.rl_window_attempts + 1 > Config.RATE_LIMIT_ATTEMPTS_IN_WINDOW:
-                return {"status": "rate_limit_reached"}   
+                window_end = user.rl_window_start + Config.RATE_LIMIT_WINDOW_SIZE
+                retry_after = window_end - now
+                retry_after = max(1, int(retry_after) + 1) # round up to second
+                return {"status": "rate_limit_reached", 
+                        "data": {"retry_after": retry_after}}   
             else:
                 db.increase_window_attempts(user) # increase attempts by 1
                 
         if Config.PROTECTION_FLAGS & Protection.CAPTCHA:
             if user.captcha_attempts + 1 > Config.MAX_CAPTCHA_ATTEMPTS: #captacha required
-                if captcha_token is None or captcha_token != self.captach_token: # if no token or incorrect
+                # if no token or incorrect
+                if captcha_token is None or not secrets.compare_digest(str(captcha_token), str(self.captcha_token)):
                     return {"status": "captcha_required"} 
                 else: # token is correct
                     db.reset_captcha_attempts(user)

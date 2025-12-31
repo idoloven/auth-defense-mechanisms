@@ -63,7 +63,8 @@ class Attacker:
                         break
                     case "rate_limit_reached":
                         # sleep for window
-                        time.sleep(1) #todo change
+                        print("sleeping for: ", data.get("retry_after"))
+                        time.sleep(data.get("retry_after"))
                     case "captcha_required":
                         captcha_token = self.get_captcha_token()
                     case "account_locked":

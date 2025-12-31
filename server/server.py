@@ -34,10 +34,8 @@ def login():
     password = data.get('password')
     captcha_token = data.get('captcha_token')
 
-    #todo validate func signature
     result = auth_manager.auth(db, username, password, captcha_token)
-
-    # todo validate signature
+    
     logger.info("", 
                 username=username,
                 result=result["status"], 
@@ -46,6 +44,8 @@ def login():
                 peak_memory = result["metrics"]["memory_peak_mb"])
     
     response_data = {"status": result["status"]}
+    if "data" in result:
+        response_data["retry_after"] = result["data"]["retry_after"]
     status_code = 200 if result["status"] == "success" else 401
     return jsonify(response_data), status_code
   
@@ -63,7 +63,7 @@ def login_totp():
 @app.route('/admin/get_captcha_token', methods=['GET'])
 def get_captcha_token():
     provided_seed = request.args.get('group_seed')
-    if provided_seed != Config.GROUP_SEED:
+    if str(provided_seed) != str(Config.GROUP_SEED):
         return jsonify({"status":"captcha_bad_group_seed"}), 401
     auth_manager.captcha_token = uuid.uuid4()
     return jsonify({"status":"success", "captcha_token": auth_manager.captcha_token}), 200
