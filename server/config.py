@@ -13,7 +13,6 @@ class Config:
     EXPERIMENT_NAME = ""
     
     # logging
-    LOG_FILE_NAME = EXPERIMENT_NAME + "-logs.json"
     LOG_BUFFER_SIZE = 65536 # for better performances
     
     # hash configs. use aither SHA256 or BCRYPT or ARGON2
@@ -28,16 +27,15 @@ class Config:
     ARGON2_PARALLELISM = 1
     ARGON2_LENGTH = 32 # common choice, also same as sha256 - good for comparison
     
-    
     # protections enabled - usage: <protection1> | <protection2> | <protection3>
     PROTECTION_FLAGS = Protection.NONE
     # rate limit
-    RATE_LIMIT_WINDOW_SIZE = 10 # in seconds
-    RATE_LIMIT_ATTEMPTS_IN_WINDOW = 100
+    RATE_LIMIT_WINDOW_SIZE = 30 # in seconds
+    RATE_LIMIT_ATTEMPTS_IN_WINDOW = 5
     # lockout
-    MAX_ATTEMPTS = 0
+    MAX_ATTEMPTS = 5
     # captcha
-    MAX_CAPTCHA_ATTEMPTS = 0
+    MAX_CAPTCHA_ATTEMPTS = 5
     # totp
     TOTP_VALID_WINDOW = 1
     

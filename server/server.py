@@ -1,4 +1,6 @@
+import os
 import uuid
+import time
 import logging
 import structlog
 from user import User
@@ -56,6 +58,13 @@ def login_totp():
     totp_token = data.get('totp_token')
     totp_result = auth_manager.auth_totp(db, username, totp_token)
     
+    logger.info("", 
+                username=username,
+                result=totp_result["status"], 
+                latency_ms = totp_result["metrics"]["latency_ms"],
+                cpu_ms = totp_result["metrics"]["cpu_ms"],
+                peak_memory = totp_result["metrics"]["memory_peak_mb"])
+    
     response_data = {"status": totp_result["status"]}
     status_code = 200 if totp_result["status"] == "totp_success" else 401
     return jsonify(response_data), status_code
@@ -66,6 +75,7 @@ def get_captcha_token():
     if str(provided_seed) != str(Config.GROUP_SEED):
         return jsonify({"status":"captcha_bad_group_seed"}), 401
     auth_manager.captcha_token = uuid.uuid4()
+    time.sleep(1) # simulates CAPTCHA solution
     return jsonify({"status":"success", "captcha_token": auth_manager.captcha_token}), 200
 
 
@@ -83,7 +93,12 @@ def configure_logger(log_file):
     
 if __name__ == "__main__":
     # logger config
-    log_file = open(Config.LOG_FILE_NAME, "a", encoding="utf-8", buffering=Config.LOG_BUFFER_SIZE)
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+    LOGS_DIR = os.path.join(PROJECT_ROOT, 'logs')
+    LOG_FILE_NAME = os.path.join(LOGS_DIR, Config.EXPERIMENT_NAME + "-logs.json")
+    
+    log_file = open(LOG_FILE_NAME, "a", encoding="utf-8", buffering=Config.LOG_BUFFER_SIZE)
     configure_logger(log_file)
     logger = structlog.get_logger().bind(
     group_seed=Config.GROUP_SEED,

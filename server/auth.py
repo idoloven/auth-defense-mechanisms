@@ -104,6 +104,7 @@ class AuthManager:
             
         result = self.is_valid_password(password, user.password, user.salt)
         if result:
+            print("success")
             if Config.PROTECTION_FLAGS & Protection.LOCKOUT: # set failed attempts to 0
                 user.failed_attempts = 0
                 db.update_failed_attempts(user)
